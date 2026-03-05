@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charger Borrower Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+    h1, h2 { color: #333; }
+    #borrower-list { margin-bottom: 30px; }
+    .borrower-btn { padding: 10px 15px; margin: 5px; background: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; }
+    .borrower-btn:hover { background: #45a049; }
+    #profile { background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 2px 10px rgba(0,0,0,0.1); }
+    .progress-bar { width: 100%; background: #ddd; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .progress-fill { height: 20px; background: #4CAF50; text-align: center; color: white; line-height: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Charger Borrower Tracker</h1>
 
+  <div id="borrower-list">
+    <h2>Select a Borrower:</h2>
+    <div id="borrowers">Loading...</div>
+  </div>
+
+  <div id="profile" style="display:none;">
+    <h2 id="borrower-name"></h2>
+    <p><strong>Credit Score:</strong> <span id="credit-score"></span>%</p>
+    <div class="progress-bar">
+      <div id="credit-progress" class="progress-fill">0%</div>
+    </div>
+
+    <h3>Loan History</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Borrow Date</th>
+          <th>Return Date</th>
+          <th>Status</th>
+          <th>Asked?</th>
+        </tr>
+      </thead>
+      <tbody id="loan-history"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // REPLACE THIS with your App Script web app URL
+    const SHEET_API_URL = 'YOUR_DEPLOYED_APPSCRIPT_URL';
+
+    let allData = [];
+
+    async function fetchData() {
+      try {
+        const res = await fetch(SHEET_API_URL);
+        allData = await res.json();
+        populateBorrowerList();
+      } catch (e) {
+        console.error("Error fetching sheet data:", e);
+        document.getElementById('borrowers').textContent = "Failed to load borrowers.";
+      }
+    }
+
+    function populateBorrowerList() {
+      const borrowersDiv = document.getElementById('borrowers');
+      borrowersDiv.innerHTML = '';
+      const uniqueNames = [...new Set(allData.map(row => row['Name']).filter(name => name))];
+      if (uniqueNames.length === 0) {
+        borrowersDiv.textContent = "No borrowers found.";
+        return;
+      }
+      uniqueNames.forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'borrower-btn';
+        btn.textContent = name;
+        btn.onclick = () => showProfile(name);
+        borrowersDiv.appendChild(btn);
+      });
+    }
+
+    function showProfile(name) {
+      const profileDiv = document.getElementById('profile');
+      profileDiv.style.display = 'block';
+      document.getElementById('borrower-name').textContent = name;
+
+      const history = allData.filter(row => row['Name'] === name);
+
+      // Credit calculation: loans returned on time without asking
+      let totalLoans = history.length;
+      let goodLoans = history.filter(row => row['Status'] === 'Returned' && row['Asked?']?.toLowerCase() !== 'yes').length;
+      let creditPercent = totalLoans ? Math.round((goodLoans / totalLoans) * 100) : 100;
+
+      document.getElementById('credit-score').textContent = creditPercent;
+      const progress = document.getElementById('credit-progress');
+      progress.style.width = creditPercent + '%';
+      progress.textContent = creditPercent + '%';
+
+      // Populate loan history
+      const tbody = document.getElementById('loan-history');
+      tbody.innerHTML = '';
+      history.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row['Borrow Date'] || ''}</td>
+          <td>${row['Return Date'] || ''}</td>
+          <td>${row['Status'] || ''}</td>
+          <td>${row['Asked?'] || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
