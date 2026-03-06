@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Charger Borrower Tracker</title>
 
 <style>
 
 body{
-font-family: 'Segoe UI', sans-serif;
+font-family:Segoe UI;
 margin:0;
 background:linear-gradient(135deg,#4facfe,#00f2fe);
-min-height:100vh;
 color:#333;
 }
 
@@ -24,119 +23,73 @@ padding:30px;
 h1{
 text-align:center;
 color:white;
-margin-bottom:30px;
 }
 
 .card{
 background:white;
-border-radius:12px;
 padding:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
-margin-bottom:20px;
+border-radius:12px;
+margin-top:20px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
-#search{
-width:100%;
+input{
 padding:10px;
 border-radius:6px;
 border:1px solid #ccc;
-margin-bottom:15px;
-font-size:16px;
+width:100%;
+margin-bottom:10px;
 }
 
-.borrower-btn{
+button{
 padding:10px 14px;
-margin:6px;
 border:none;
 border-radius:6px;
-background:#4CAF50;
-color:white;
 cursor:pointer;
-font-size:14px;
-transition:.2s;
 }
 
-.borrower-btn:hover{
-background:#3e8e41;
-transform:scale(1.05);
+.borrow-btn{background:#007bff;color:white;}
+.return-btn{background:#4CAF50;color:white;}
+.ask-btn{background:#ff9800;color:white;}
+.hide-btn{background:#e74c3c;color:white;}
+
+.borrower-btn{
+background:#4CAF50;
+color:white;
+margin:5px;
 }
 
 .progress-bar{
-width:100%;
 background:#eee;
-border-radius:8px;
+border-radius:10px;
 overflow:hidden;
-margin-top:10px;
 }
 
 .progress-fill{
 height:20px;
 background:linear-gradient(90deg,#00c6ff,#0072ff);
-color:white;
 text-align:center;
-font-size:12px;
+color:white;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:15px;
 }
 
 th,td{
 padding:10px;
 border-bottom:1px solid #eee;
-text-align:left;
 }
 
-th{
-background:#f4f4f4;
-}
+.status-returned{color:green;font-weight:bold;}
+.status-late{color:orange;font-weight:bold;}
+.status-borrowed{color:blue;font-weight:bold;}
 
-.status-returned{
-color:green;
-font-weight:bold;
-}
-
-.status-late{
-color:orange;
-font-weight:bold;
-}
-
-.status-verylate{
-color:red;
-font-weight:bold;
-}
-
-.status-extremelylate{
-color:darkred;
-font-weight:bold;
-}
-
-.status-borrowed{
-color:#007bff;
-font-weight:bold;
-}
-
-.hidden{
-display:none;
-}
-
-.hide-btn{
-margin-top:10px;
-padding:8px 12px;
-border:none;
-border-radius:6px;
-background:#e74c3c;
-color:white;
-cursor:pointer;
-}
-
-.hide-btn:hover{
-background:#c0392b;
-}
+.hidden{display:none;}
 
 </style>
+
 </head>
 
 <body>
@@ -147,24 +100,45 @@ background:#c0392b;
 
 <div class="card">
 
-<h2>Borrowers</h2>
+<h2>Borrow Charger</h2>
 
-<input id="search" placeholder="Search borrower name...">
+<input id="borrowName" placeholder="Student Name">
 
-<div id="borrowers">Loading borrowers...</div>
+<button class="borrow-btn" onclick="borrow()">Borrow Charger</button>
+
+<p id="borrowStatus"></p>
 
 </div>
+
+
+<div class="card">
+
+<h2>Borrowers</h2>
+
+<input id="search" placeholder="Search borrower">
+
+<div id="borrowers"></div>
+
+</div>
+
 
 <div class="card hidden" id="profile">
 
-<h2 id="borrower-name"></h2>
-<button onclick="hideProfile()" class="hide-btn">Hide Profile</button>
+<h2 id="profileName"></h2>
 
-<p><strong>Credit Score:</strong> <span id="credit-score"></span>%</p>
+<button class="hide-btn" onclick="hideProfile()">Hide Profile</button>
+
+<p><b>Credit Score:</b> <span id="credit"></span>%</p>
 
 <div class="progress-bar">
-<div id="credit-progress" class="progress-fill">0%</div>
+<div class="progress-fill" id="creditBar"></div>
 </div>
+
+<br>
+
+<button class="return-btn" onclick="returnCharger()">Return Charger</button>
+
+<button class="ask-btn" onclick="markAsked()">Asked For Charger</button>
 
 <h3>Loan History</h3>
 
@@ -175,11 +149,11 @@ background:#c0392b;
 <th>Borrow Date</th>
 <th>Return Date</th>
 <th>Status</th>
-<th>Asked?</th>
+<th>Asked</th>
 </tr>
 </thead>
 
-<tbody id="loan-history"></tbody>
+<tbody id="history"></tbody>
 
 </table>
 
@@ -189,124 +163,91 @@ background:#c0392b;
 
 <script>
 
-const SHEET_API_URL =
-'https://script.google.com/macros/s/AKfycbxgHM2VbpX3QL0_aK2fHZda_p3NI-CDwvkvVuWBz2JEXs8grOsw51JSF29uwoutpPdOtg/exec';
+const API="PASTE_YOUR_SCRIPT_URL_HERE";
 
-let allData=[];
+let data=[];
+let currentName="";
 
-function formatDate(d){
 
-if(!d) return '';
+async function load(){
 
-let date=new Date(d);
+let res=await fetch(API);
 
-return date.toLocaleDateString()+" "+date.toLocaleTimeString();
+data=await res.json();
 
-}
-
-function getStatusClass(status){
-
-if(status==="Returned") return "status-returned";
-
-if(status==="Late") return "status-late";
-
-if(status==="Very Late") return "status-verylate";
-
-if(status==="Extremely Late") return "status-extremelylate";
-
-if(status==="Still Borrowed") return "status-borrowed";
-
-return "";
+renderBorrowers();
 
 }
 
-async function fetchData(){
+function renderBorrowers(){
 
-try{
+let div=document.getElementById("borrowers");
 
-let res=await fetch(SHEET_API_URL);
+div.innerHTML="";
 
-allData=await res.json();
-
-populateBorrowers();
-
-}catch(e){
-
-document.getElementById("borrowers").innerText="Failed to load.";
-
-console.error(e);
-
-}
-
-}
-
-function populateBorrowers(){
-
-let borrowersDiv=document.getElementById("borrowers");
-
-borrowersDiv.innerHTML="";
-
-let names=[...new Set(allData.map(r=>r["Borrower Name"]).filter(Boolean))];
+let names=[...new Set(data.map(d=>d.Name).filter(Boolean))];
 
 names.sort();
 
-names.forEach(name=>{
+names.forEach(n=>{
 
-let btn=document.createElement("button");
+let b=document.createElement("button");
 
-btn.className="borrower-btn";
+b.className="borrower-btn";
 
-btn.innerText=name;
+b.innerText=n;
 
-btn.onclick=()=>showProfile(name);
+b.onclick=()=>openProfile(n);
 
-borrowersDiv.appendChild(btn);
+div.appendChild(b);
 
 });
 
 }
 
-function showProfile(name){
+function openProfile(name){
+
+currentName=name;
 
 document.getElementById("profile").classList.remove("hidden");
 
-document.getElementById("borrower-name").innerText=name;
+document.getElementById("profileName").innerText=name;
 
-let history=allData.filter(r=>r["Borrower Name"]===name);
+let history=data.filter(d=>d.Name===name);
 
 let total=history.length;
 
-let good=history.filter(r=>r["Status"]==="Returned" && (r["Asked?"]||"").toLowerCase()!=="yes").length;
+let good=history.filter(d=>d.Status==="Returned" && d["Asked?"]!=="Yes").length;
 
-let credit=total?Math.round((good/total)*100):100;
+let credit=Math.round((good/total)*100)||0;
 
-document.getElementById("credit-score").innerText=credit;
+document.getElementById("credit").innerText=credit;
 
-let bar=document.getElementById("credit-progress");
+let bar=document.getElementById("creditBar");
 
 bar.style.width=credit+"%";
 
 bar.innerText=credit+"%";
 
-let tbody=document.getElementById("loan-history");
+let tbody=document.getElementById("history");
 
 tbody.innerHTML="";
 
-history.reverse().forEach(row=>{
+history.reverse().forEach(r=>{
 
 let tr=document.createElement("tr");
 
-let status=row["Status"]||"";
+let statusClass=r.Status==="Returned"?"status-returned":"status-borrowed";
 
 tr.innerHTML=`
 
-<td>${formatDate(row["Borrow Date"])}</td>
+<td>${format(r["Borrow Date"])}</td>
 
-<td>${formatDate(row["Return Date"])}</td>
+<td>${format(r["Return Date"])}</td>
 
-<td class="${getStatusClass(status)}">${status}</td>
+<td class="${statusClass}">${r.Status||""}</td>
 
-<td>${row["Asked?"]||""}</td>
+<td>${r["Asked?"]||""}</td>
 
 `;
 
@@ -316,13 +257,63 @@ tbody.appendChild(tr);
 
 }
 
+function hideProfile(){
+
+document.getElementById("profile").classList.add("hidden");
+
+}
+
+function format(d){
+
+if(!d)return "";
+
+return new Date(d).toLocaleString();
+
+}
+
+
+async function borrow(){
+
+let name=document.getElementById("borrowName").value;
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({action:"borrow",name:name})
+});
+
+load();
+
+}
+
+
+async function returnCharger(){
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({action:"return",name:currentName})
+});
+
+load();
+
+}
+
+
+async function markAsked(){
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({action:"ask",name:currentName})
+});
+
+load();
+
+}
+
 document.getElementById("search").addEventListener("input",function(){
 
 let value=this.value.toLowerCase();
 
-let buttons=document.querySelectorAll(".borrower-btn");
-
-buttons.forEach(btn=>{
+document.querySelectorAll(".borrower-btn").forEach(btn=>{
 
 btn.style.display=btn.innerText.toLowerCase().includes(value)?"inline-block":"none";
 
@@ -330,11 +321,7 @@ btn.style.display=btn.innerText.toLowerCase().includes(value)?"inline-block":"no
 
 });
 
-fetchData();
-
-function hideProfile(){
-document.getElementById("profile").classList.add("hidden");
-}
+load();
 
 </script>
 
