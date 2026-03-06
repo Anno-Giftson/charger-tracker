@@ -59,6 +59,17 @@ color:white;
 margin:5px;
 }
 
+.notification{
+position:fixed;
+top:20px;
+right:20px;
+background:#333;
+color:white;
+padding:12px 16px;
+border-radius:8px;
+display:none;
+}
+
 .progress-bar{
 background:#eee;
 border-radius:10px;
@@ -84,6 +95,7 @@ border-bottom:1px solid #eee;
 
 .status-returned{color:green;font-weight:bold;}
 .status-late{color:orange;font-weight:bold;}
+.status-verylate{color:red;font-weight:bold;}
 .status-borrowed{color:blue;font-weight:bold;}
 
 .hidden{display:none;}
@@ -94,9 +106,12 @@ border-bottom:1px solid #eee;
 
 <body>
 
+<div class="notification" id="notify"></div>
+
 <div class="container">
 
 <h1>🔌 Charger Borrower Tracker</h1>
+
 
 <div class="card">
 
@@ -106,7 +121,14 @@ border-bottom:1px solid #eee;
 
 <button class="borrow-btn" onclick="borrow()">Borrow Charger</button>
 
-<p id="borrowStatus"></p>
+</div>
+
+
+<div class="card">
+
+<h2>Active Borrowers</h2>
+
+<div id="active"></div>
 
 </div>
 
@@ -118,6 +140,15 @@ border-bottom:1px solid #eee;
 <input id="search" placeholder="Search borrower">
 
 <div id="borrowers"></div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🏆 Best Borrowers</h2>
+
+<div id="leaderboard"></div>
 
 </div>
 
@@ -168,6 +199,17 @@ const API="PASTE_YOUR_SCRIPT_URL_HERE";
 let data=[];
 let currentName="";
 
+function notify(msg){
+
+let n=document.getElementById("notify");
+
+n.innerText=msg;
+
+n.style.display="block";
+
+setTimeout(()=>n.style.display="none",3000);
+
+}
 
 async function load(){
 
@@ -177,7 +219,12 @@ data=await res.json();
 
 renderBorrowers();
 
+renderActive();
+
+renderLeaderboard();
+
 }
+
 
 function renderBorrowers(){
 
@@ -204,6 +251,67 @@ div.appendChild(b);
 });
 
 }
+
+
+function renderActive(){
+
+let div=document.getElementById("active");
+
+div.innerHTML="";
+
+let active=data.filter(d=>d.Status==="Still Borrowed");
+
+active.forEach(a=>{
+
+let el=document.createElement("div");
+
+el.innerText=a.Name;
+
+div.appendChild(el);
+
+});
+
+}
+
+
+function renderLeaderboard(){
+
+let div=document.getElementById("leaderboard");
+
+div.innerHTML="";
+
+let stats={};
+
+data.forEach(r=>{
+
+if(!stats[r.Name]) stats[r.Name]={good:0,total:0};
+
+stats[r.Name].total++;
+
+if(r.Status==="Returned" && r["Asked?"]!=="Yes") stats[r.Name].good++;
+
+});
+
+let arr=Object.entries(stats).map(([name,v])=>{
+
+return {name,score:Math.round((v.good/v.total)*100)||0};
+
+});
+
+arr.sort((a,b)=>b.score-a.score);
+
+arr.slice(0,5).forEach(s=>{
+
+let el=document.createElement("div");
+
+el.innerText=s.name+" - "+s.score+"%";
+
+div.appendChild(el);
+
+});
+
+}
+
 
 function openProfile(name){
 
@@ -235,18 +343,21 @@ tbody.innerHTML="";
 
 history.reverse().forEach(r=>{
 
-let tr=document.createElement("tr");
+let statusClass="status-borrowed";
 
-let statusClass=r.Status==="Returned"?"status-returned":"status-borrowed";
+if(r.Status==="Returned")statusClass="status-returned";
+
+if(r.Status==="Late")statusClass="status-late";
+
+if(r.Status==="Very Late")statusClass="status-verylate";
+
+let tr=document.createElement("tr");
 
 tr.innerHTML=`
 
 <td>${format(r["Borrow Date"])}</td>
-
 <td>${format(r["Return Date"])}</td>
-
 <td class="${statusClass}">${r.Status||""}</td>
-
 <td>${r["Asked?"]||""}</td>
 
 `;
@@ -257,11 +368,13 @@ tbody.appendChild(tr);
 
 }
 
+
 function hideProfile(){
 
 document.getElementById("profile").classList.add("hidden");
 
 }
+
 
 function format(d){
 
@@ -278,8 +391,11 @@ let name=document.getElementById("borrowName").value;
 
 await fetch(API,{
 method:"POST",
+headers:{'Content-Type':'application/json'},
 body:JSON.stringify({action:"borrow",name:name})
 });
+
+notify(name+" has been added");
 
 load();
 
@@ -290,8 +406,11 @@ async function returnCharger(){
 
 await fetch(API,{
 method:"POST",
+headers:{'Content-Type':'application/json'},
 body:JSON.stringify({action:"return",name:currentName})
 });
+
+notify(currentName+" returned charger");
 
 load();
 
@@ -302,12 +421,16 @@ async function markAsked(){
 
 await fetch(API,{
 method:"POST",
+headers:{'Content-Type':'application/json'},
 body:JSON.stringify({action:"ask",name:currentName})
 });
+
+notify("Marked as asked");
 
 load();
 
 }
+
 
 document.getElementById("search").addEventListener("input",function(){
 
@@ -320,6 +443,7 @@ btn.style.display=btn.innerText.toLowerCase().includes(value)?"inline-block":"no
 });
 
 });
+
 
 load();
 
