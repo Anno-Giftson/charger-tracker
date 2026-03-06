@@ -1,107 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Charger Borrower Tracker</title>
 
 <style>
-
 body{
-font-family:Segoe UI;
-margin:0;
-background:linear-gradient(135deg,#4facfe,#00f2fe);
-color:#333;
+  font-family:Segoe UI;
+  margin:0;
+  background:linear-gradient(135deg,#4facfe,#00f2fe);
+  color:#333;
 }
-
 .container{
-max-width:1100px;
-margin:auto;
-padding:30px;
+  max-width:1100px;
+  margin:auto;
+  padding:30px;
 }
-
 h1{
-text-align:center;
-color:white;
+  text-align:center;
+  color:white;
 }
-
 .card{
-background:white;
-padding:20px;
-border-radius:12px;
-margin-top:20px;
-box-shadow:0 10px 20px rgba(0,0,0,0.1);
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  margin-top:20px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
-
 input{
-padding:10px;
-border-radius:6px;
-border:1px solid #ccc;
-width:100%;
-margin-bottom:10px;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  width:100%;
+  margin-bottom:10px;
 }
-
 button{
-padding:10px 14px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+  padding:10px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
 .borrow-btn{background:#007bff;color:white;}
 .return-btn{background:#4CAF50;color:white;}
 .ask-btn{background:#ff9800;color:white;}
 .hide-btn{background:#e74c3c;color:white;}
-
 .borrower-btn{
-background:#4CAF50;
-color:white;
-margin:5px;
+  background:#4CAF50;
+  color:white;
+  margin:5px;
 }
-
 .notification{
-position:fixed;
-top:20px;
-right:20px;
-background:#333;
-color:white;
-padding:12px 16px;
-border-radius:8px;
-display:none;
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#333;
+  color:white;
+  padding:12px 16px;
+  border-radius:8px;
+  display:none;
 }
-
 .progress-bar{
-background:#eee;
-border-radius:10px;
-overflow:hidden;
+  background:#eee;
+  border-radius:10px;
+  overflow:hidden;
 }
-
 .progress-fill{
-height:20px;
-background:linear-gradient(90deg,#00c6ff,#0072ff);
-text-align:center;
-color:white;
+  height:20px;
+  background:linear-gradient(90deg,#00c6ff,#0072ff);
+  text-align:center;
+  color:white;
 }
-
 table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
 }
-
 th,td{
-padding:10px;
-border-bottom:1px solid #eee;
+  padding:10px;
+  border-bottom:1px solid #eee;
 }
-
 .status-returned{color:green;font-weight:bold;}
 .status-late{color:orange;font-weight:bold;}
 .status-verylate{color:red;font-weight:bold;}
 .status-borrowed{color:blue;font-weight:bold;}
-
 .hidden{display:none;}
-
 </style>
-
 </head>
 
 <body>
@@ -112,342 +94,211 @@ border-bottom:1px solid #eee;
 
 <h1>🔌 Charger Borrower Tracker</h1>
 
-
 <div class="card">
-
-<h2>Borrow Charger</h2>
-
-<input id="borrowName" placeholder="Student Name">
-
-<button class="borrow-btn" onclick="borrow()">Borrow Charger</button>
-
+  <h2>Borrow Charger</h2>
+  <input id="borrowName" placeholder="Student Name">
+  <button class="borrow-btn" onclick="borrow()">Borrow Charger</button>
 </div>
 
-
 <div class="card">
-
-<h2>Active Borrowers</h2>
-
-<div id="active"></div>
-
+  <h2>Active Borrowers</h2>
+  <h3 id="activeCount"></h3>
+  <div id="active"></div>
 </div>
 
-
 <div class="card">
-
-<h2>Borrowers</h2>
-
-<input id="search" placeholder="Search borrower">
-
-<div id="borrowers"></div>
-
+  <h2>Borrowers</h2>
+  <input id="search" placeholder="Search borrower">
+  <div id="borrowers"></div>
 </div>
 
-
 <div class="card">
-
-<h2>🏆 Best Borrowers</h2>
-
-<div id="leaderboard"></div>
-
+  <h2>🏆 Best Borrowers</h2>
+  <div id="leaderboard"></div>
 </div>
-
 
 <div class="card hidden" id="profile">
-
-<h2 id="profileName"></h2>
-
-<button class="hide-btn" onclick="hideProfile()">Hide Profile</button>
-
-<p><b>Credit Score:</b> <span id="credit"></span>%</p>
-
-<div class="progress-bar">
-<div class="progress-fill" id="creditBar"></div>
-</div>
-
-<br>
-
-<button class="return-btn" onclick="returnCharger()">Return Charger</button>
-
-<button class="ask-btn" onclick="markAsked()">Asked For Charger</button>
-
-<h3>Loan History</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>Borrow Date</th>
-<th>Return Date</th>
-<th>Status</th>
-<th>Asked</th>
-</tr>
-</thead>
-
-<tbody id="history"></tbody>
-
-</table>
-
+  <h2 id="profileName"></h2>
+  <button class="hide-btn" onclick="hideProfile()">Hide Profile</button>
+  <p><b>Credit Score:</b> <span id="credit"></span>%</p>
+  <div class="progress-bar">
+    <div class="progress-fill" id="creditBar"></div>
+  </div>
+  <br>
+  <button class="return-btn" onclick="returnCharger()">Return Charger</button>
+  <button class="ask-btn" onclick="markAsked()">Asked For Charger</button>
+  <h3>Loan History</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Borrow Date</th>
+        <th>Return Date</th>
+        <th>Status</th>
+        <th>Asked</th>
+      </tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
 </div>
 
 </div>
 
 <script>
-
-const API="PASTE_YOUR_SCRIPT_URL_HERE";
+const API="https://script.google.com/macros/s/AKfycbxgHM2VbpX3QL0_aK2fHZda_p3NI-CDwvkvVuWBz2JEXs8grOsw51JSF29uwoutpPdOtg/exec";
 
 let data=[];
 let currentName="";
 
 function notify(msg){
-
-let n=document.getElementById("notify");
-
-n.innerText=msg;
-
-n.style.display="block";
-
-setTimeout(()=>n.style.display="none",3000);
-
+  let n=document.getElementById("notify");
+  n.innerText=msg;
+  n.style.display="block";
+  setTimeout(()=>n.style.display="none",3000);
 }
 
 async function load(){
-
-let res=await fetch(API);
-
-data=await res.json();
-
-renderBorrowers();
-
-renderActive();
-
-renderLeaderboard();
-
+  try {
+    let res=await fetch(API);
+    data=await res.json();
+    renderBorrowers();
+    renderActive();
+    renderLeaderboard();
+  } catch(e){
+    console.error(e);
+    notify("Server error loading data");
+  }
 }
-
 
 function renderBorrowers(){
-
-let div=document.getElementById("borrowers");
-
-div.innerHTML="";
-
-let names=[...new Set(data.map(d=>d.Name).filter(Boolean))];
-
-names.sort();
-
-names.forEach(n=>{
-
-let b=document.createElement("button");
-
-b.className="borrower-btn";
-
-b.innerText=n;
-
-b.onclick=()=>openProfile(n);
-
-div.appendChild(b);
-
-});
-
+  let div=document.getElementById("borrowers");
+  div.innerHTML="";
+  let names=[...new Set(data.map(d=>d.Name).filter(Boolean))];
+  names.sort();
+  names.forEach(n=>{
+    let b=document.createElement("button");
+    b.className="borrower-btn";
+    b.innerText=n;
+    b.onclick=()=>openProfile(n);
+    div.appendChild(b);
+  });
 }
-
 
 function renderActive(){
-
-let div=document.getElementById("active");
-
-div.innerHTML="";
-
-let active=data.filter(d=>d.Status==="Still Borrowed");
-
-active.forEach(a=>{
-
-let el=document.createElement("div");
-
-el.innerText=a.Name;
-
-div.appendChild(el);
-
-});
-
+  let div=document.getElementById("active");
+  div.innerHTML="";
+  let active=data.filter(d=>d.Status==="Still Borrowed");
+  document.getElementById("activeCount").innerText = "Currently Borrowed: " + active.length;
+  active.forEach(a=>{
+    let el=document.createElement("div");
+    el.innerText=a.Name + " — " + format(a["Borrow Date"]);
+    div.appendChild(el);
+  });
 }
-
 
 function renderLeaderboard(){
-
-let div=document.getElementById("leaderboard");
-
-div.innerHTML="";
-
-let stats={};
-
-data.forEach(r=>{
-
-if(!stats[r.Name]) stats[r.Name]={good:0,total:0};
-
-stats[r.Name].total++;
-
-if(r.Status==="Returned" && r["Asked?"]!=="Yes") stats[r.Name].good++;
-
-});
-
-let arr=Object.entries(stats).map(([name,v])=>{
-
-return {name,score:Math.round((v.good/v.total)*100)||0};
-
-});
-
-arr.sort((a,b)=>b.score-a.score);
-
-arr.slice(0,5).forEach(s=>{
-
-let el=document.createElement("div");
-
-el.innerText=s.name+" - "+s.score+"%";
-
-div.appendChild(el);
-
-});
-
+  let div=document.getElementById("leaderboard");
+  div.innerHTML="";
+  let stats={};
+  data.forEach(r=>{
+    if(!stats[r.Name]) stats[r.Name]={good:0,total:0};
+    stats[r.Name].total++;
+    if(r.Status==="Returned" && r["Asked?"]!=="Yes") stats[r.Name].good++;
+  });
+  let arr=Object.entries(stats).map(([name,v])=>({name,score:v.total?Math.round((v.good/v.total)*100):0}));
+  arr.sort((a,b)=>b.score-a.score);
+  arr.slice(0,5).forEach(s=>{
+    let el=document.createElement("div");
+    el.innerText=s.name+" - "+s.score+"%";
+    div.appendChild(el);
+  });
 }
-
 
 function openProfile(name){
-
-currentName=name;
-
-document.getElementById("profile").classList.remove("hidden");
-
-document.getElementById("profileName").innerText=name;
-
-let history=data.filter(d=>d.Name===name);
-
-let total=history.length;
-
-let good=history.filter(d=>d.Status==="Returned" && d["Asked?"]!=="Yes").length;
-
-let credit=Math.round((good/total)*100)||0;
-
-document.getElementById("credit").innerText=credit;
-
-let bar=document.getElementById("creditBar");
-
-bar.style.width=credit+"%";
-
-bar.innerText=credit+"%";
-
-let tbody=document.getElementById("history");
-
-tbody.innerHTML="";
-
-history.reverse().forEach(r=>{
-
-let statusClass="status-borrowed";
-
-if(r.Status==="Returned")statusClass="status-returned";
-
-if(r.Status==="Late")statusClass="status-late";
-
-if(r.Status==="Very Late")statusClass="status-verylate";
-
-let tr=document.createElement("tr");
-
-tr.innerHTML=`
-
-<td>${format(r["Borrow Date"])}</td>
-<td>${format(r["Return Date"])}</td>
-<td class="${statusClass}">${r.Status||""}</td>
-<td>${r["Asked?"]||""}</td>
-
-`;
-
-tbody.appendChild(tr);
-
-});
-
+  currentName=name;
+  document.getElementById("profile").classList.remove("hidden");
+  document.getElementById("profileName").innerText=name;
+  let history=data.filter(d=>d.Name===name);
+  let total=history.length;
+  let good=history.filter(d=>d.Status==="Returned" && d["Asked?"]!=="Yes").length;
+  let credit = total ? Math.round((good/total)*100) : 0;
+  document.getElementById("credit").innerText=credit;
+  let bar=document.getElementById("creditBar");
+  bar.style.width=credit+"%";
+  bar.innerText=credit+"%";
+  let tbody=document.getElementById("history");
+  tbody.innerHTML="";
+  history.reverse().forEach(r=>{
+    let statusClass="status-borrowed";
+    if(r.Status==="Returned")statusClass="status-returned";
+    if(r.Status==="Late")statusClass="status-late";
+    if(r.Status==="Very Late")statusClass="status-verylate";
+    let tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${format(r["Borrow Date"])}</td>
+      <td>${format(r["Return Date"])}</td>
+      <td class="${statusClass}">${r.Status||""}</td>
+      <td>${r["Asked?"]||""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
-
 
 function hideProfile(){
-
-document.getElementById("profile").classList.add("hidden");
-
+  document.getElementById("profile").classList.add("hidden");
 }
-
 
 function format(d){
-
-if(!d)return "";
-
-return new Date(d).toLocaleString();
-
+  if(!d)return "";
+  return new Date(d).toLocaleString();
 }
-
 
 async function borrow(){
+  const btn=document.querySelector(".borrow-btn");
+  btn.disabled=true;
 
-let name=document.getElementById("borrowName").value;
+  let name=document.getElementById("borrowName").value.trim();
+  if(!name){ notify("Enter a student name"); btn.disabled=false; return; }
 
-await fetch(API,{
-method:"POST",
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({action:"borrow",name:name})
-});
-
-notify(name+" has been added");
-
-load();
-
+  let res = await fetch(API, {
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"borrow",name})
+  });
+  let text=await res.text();
+  if(text==="already borrowed") notify(name+" has already borrowed");
+  else notify(name+" has been added");
+  btn.disabled=false;
+  load();
 }
-
 
 async function returnCharger(){
-
-await fetch(API,{
-method:"POST",
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({action:"return",name:currentName})
-});
-
-notify(currentName+" returned charger");
-
-load();
-
+  await fetch(API,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"return",name:currentName})
+  });
+  notify(currentName+" returned charger");
+  load();
 }
-
 
 async function markAsked(){
-
-await fetch(API,{
-method:"POST",
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({action:"ask",name:currentName})
-});
-
-notify("Marked as asked");
-
-load();
-
+  await fetch(API,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"ask",name:currentName})
+  });
+  notify("Marked as asked");
+  load();
 }
 
-
 document.getElementById("search").addEventListener("input",function(){
-
-let value=this.value.toLowerCase();
-
-document.querySelectorAll(".borrower-btn").forEach(btn=>{
-
-btn.style.display=btn.innerText.toLowerCase().includes(value)?"inline-block":"none";
-
+  let value=this.value.toLowerCase();
+  document.querySelectorAll(".borrower-btn").forEach(btn=>{
+    btn.style.display=btn.innerText.toLowerCase().includes(value)?"inline-block":"none";
+  });
 });
-
-});
-
 
 load();
-
 </script>
-
 </body>
 </html>
